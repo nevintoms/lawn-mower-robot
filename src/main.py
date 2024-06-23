@@ -1,6 +1,6 @@
-from controller import RobotController
-
 from random import randint
+
+from controller import RobotController
 
 
 def get_live_robot_cords():

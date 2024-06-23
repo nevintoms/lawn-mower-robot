@@ -6,7 +6,9 @@ from typing import List
 class Map:
 
     def __init__(self) -> None:
-        self.INTERVAL = 0.00005  # Adjust the interval to match the latitude and longitude scale
+        self.INTERVAL = (
+            0.00005  # Adjust the interval to match the latitude and longitude scale
+        )
         self.NUM_BOUNDARY_LAYERS = 3
         self.SHRINK_FACTOR = 0.95  # Adjust the shrink factor as necessary
 
@@ -20,7 +22,7 @@ class Map:
             (43.935763, -78.734302),  # Bottom-left
             (43.935871, -78.733749),  # Bottom-right
             (43.936303, -78.733910),  # Top-right
-            (43.936211, -78.734543),
+            (43.936211, -78.734543),  # Top-left
         ]
         return polygon_cords
 
