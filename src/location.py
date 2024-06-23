@@ -6,7 +6,9 @@ from typing import List
 class Map:
 
     def __init__(self) -> None:
-        pass
+        self.INTERVAL = 0.00005  # Adjust the interval to match the latitude and longitude scale
+        self.NUM_BOUNDARY_LAYERS = 3
+        self.SHRINK_FACTOR = 0.95  # Adjust the shrink factor as necessary
 
     def _get_coordinates(self) -> List:
         """
@@ -14,45 +16,40 @@ class Map:
         selected area using selenioum from google maps.
         """
         # Define polygon boundary coordinates using latitude and longitude
-        polygon_coords = [
+        polygon_cords = [
             (43.935763, -78.734302),  # Bottom-left
             (43.935871, -78.733749),  # Bottom-right
             (43.936303, -78.733910),  # Top-right
             (43.936211, -78.734543),
         ]
-        return polygon_coords
+        return polygon_cords
 
-    # def _zigzag_path(self, cords: List) -> List[List]:
-    #     """
-    #     This fucntion generates the best fit zigzag path
-    #     inside the selected area.
-    #     """
-    def generate_boundary_paths(polygon_coords, num_boundary_layers, shrink_factor):
-        polygon = Polygon(polygon_coords)
+    def generate_boundary_paths(self, polygon_cords):
+        polygon = Polygon(polygon_cords)
         paths = []
         current_polygon = polygon
 
-        for i in range(num_boundary_layers):
-            exterior_coords = current_polygon.exterior.coords[
+        for i in range(self.NUM_BOUNDARY_LAYERS):
+            exterior_cords = current_polygon.exterior.coords[
                 :-1
             ]  # Exclude the repeated last point
-            paths.append(exterior_coords)
+            paths.append(exterior_cords)
             current_polygon = scale(
                 current_polygon,
-                xfact=shrink_factor,
-                yfact=shrink_factor,
+                xfact=self.SHRINK_FACTOR,
+                yfact=self.SHRINK_FACTOR,
                 origin="center",
             )
 
         return paths
 
-    def generate_zigzag_path_with_boundaries(
-        polygon_coords, interval, num_boundary_layers, shrink_factor
-    ):
-        boundary_paths = generate_boundary_paths(
-            polygon_coords, num_boundary_layers, shrink_factor
-        )
-        polygon = Polygon(polygon_coords)
+    def generate_zigzag_path_with_boundaries(self, polygon_cords):
+        """
+        This fucntion generates the best fit zigzag path
+        inside the selected area.
+        """
+        boundary_paths = self.generate_boundary_paths(polygon_cords)
+        polygon = Polygon(polygon_cords)
         minx, miny, maxx, maxy = polygon.bounds
         path = []
 
@@ -80,31 +77,19 @@ class Map:
                 elif isinstance(intersection_points, MultiLineString):
                     points = []
                     for linestring in intersection_points:
-                        points.extend([Point(coord) for coord in linestring.coords])
+                        points.extend([Point(coord) for coord in linestring.cords])
 
                 points = sorted(points, key=lambda p: p.x)
                 if direction == -1:
                     points.reverse()
                 for point in points:
                     path.append((point.x, point.y))
-            y += interval
+            y += self.INTERVAL
             direction *= -1
 
         return path
-        # return [
-        #     [(0, 0), (0, 100)],
-        #     [(0, 100), (100, 10)],
-        #     [(100, 10), (0, 10)],
-        #     [(0, 10), (0, 20)],
-        #     [(0, 20), (100, 20)],
-        # ]
 
-    def get_path(self):
+    def get_path_with_cords(self):
         cords = self._get_coordinates()
-        interval = 0.00005  # Adjust the interval to match the latitude and longitude scale
-        num_boundary_layers = 3
-        shrink_factor = 0.95  # Adjust the shrink factor as necessary
-        zigzag_path = self.generate_zigzag_path_with_boundaries(
-            cords, interval, num_boundary_layers, shrink_factor
-        )
-        return zigzag_path
+        zigzag_path = self.generate_zigzag_path_with_boundaries(cords)
+        return zigzag_path, cords
